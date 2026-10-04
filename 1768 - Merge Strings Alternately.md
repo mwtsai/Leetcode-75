@@ -78,3 +78,22 @@ class Solution {
         return sb.toString();
     }
 }
+
+## ⚡ Complexity Analysis
+
+- **Time Complexity**: $\mathcal{O}(N + M)$
+  - Step 1 runs in $\mathcal{O}(\min(N, M))$.
+  - Step 2 appends the suffix in $\mathcal{O}(\vert{}N - M\vert{})$.
+  - Total time complexity is strictly $\mathcal{O}(\max(N, M)) = \mathcal{O}(N + M)$.
+- **Space Complexity**: $\mathcal{O}(1)$ auxiliary space
+  - Pre-allocated buffer matches the exact target length ($N + M$).
+  - No intermediate sub-string objects are generated.
+
+---
+
+## ⚙️ Key Technical Takeaways (Java Mechanics)
+
+1. **`StringBuilder` Capacity Expansion**:
+   Default `StringBuilder` starts with a capacity of 16. Without specifying capacity, merging long strings causes repeated array resizing (`oldCapacity * 2 + 2`) and array copies.
+2. **`substring()` vs `append(CharSequence, start, end)`**:
+   `String.substring()` allocates a new `String` object on the Heap. Passing index bounds directly to `StringBuilder.append()` operates directly on underlying character data without temporary allocations.
