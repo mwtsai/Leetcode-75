@@ -78,6 +78,7 @@ class Solution {
         return sb.toString();
     }
 }
+```
 
 ## ⚡ Complexity Analysis
 
