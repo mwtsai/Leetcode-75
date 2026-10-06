@@ -11,28 +11,19 @@ Flowers cannot be planted in adjacent positions.
 
 Given an integer `n`, return `true` if `n` new flowers can be planted without violating the no-adjacent-flowers rule.
 
-### Example
-
-```text
-flowerbed = [1,0,0,0,1]
-n = 1
-
-Output: true
-```
-
-The flower can be planted at index `2`.
-
 ---
 
 ## Solution
 
 ### Approach: Greedy with Pattern Skipping
 
-Instead of checking every position independently, we can use the current position and the next position to determine how far we can safely skip.
+Instead of checking every position independently, scan from left to right and use the current position and the next position to determine how far we can safely skip.
 
-The key idea is that once we know the current pattern, some positions can no longer be valid candidates.
+The key idea is:
 
-There are three important patterns:
+> Once the current pattern tells us that certain positions cannot be used, we should skip them instead of checking them again.
+
+There are three main patterns:
 
 ```text
 [1, ?]  → skip 2 positions
@@ -52,52 +43,45 @@ left + 1
 
 Therefore, a separate `right` pointer is unnecessary.
 
+---
+
 ### Code
 
 ```java
 class Solution {
     public boolean canPlaceFlowers(int[] flowerbed, int n) {
-
         // If no flowers need to be planted, we are already done.
-        if (n == 0) {
-            return true;
-        }
+        if (n <= 0) return true;
 
-        // left represents the current position we are checking.
         int left = 0;
 
         while (left < flowerbed.length) {
 
-            // If there is already a flower at left,
+            // If there is already a flower at the current position,
             // skip the current position and the next position.
             if (flowerbed[left] == 1) {
                 left += 2;
 
-            // left is the last position.
-            // Since it is empty, we can plant a flower here.
-            } else if (left + 1 == flowerbed.length) {
-                n--;
-                left += 2;
-
-            // left is empty, but the next position has a flower.
-            // Skip both positions and move to the next possible position.
-            } else if (flowerbed[left + 1] == 1) {
+            // The current position is empty, but the next position
+            // already has a flower. Skip to the next possible position.
+            } else if (left + 1 < flowerbed.length && flowerbed[left + 1] == 1) {
                 left += 3;
 
-            // Both left and the next position are empty.
-            // Greedily plant a flower at left.
+            // The current position is empty, and the next position
+            // is either empty or outside the flowerbed.
+            // Therefore, we can greedily plant a flower here.
             } else {
                 n--;
                 left += 2;
             }
 
-            // Check if we have planted enough flowers.
-            if (n == 0) {
+            // Stop early once we have planted enough flowers.
+            if (n <= 0) {
                 return true;
             }
         }
 
-        // We checked the entire flowerbed but still need more flowers.
+        // The entire flowerbed was checked, but more flowers are needed.
         return false;
     }
 }
@@ -111,7 +95,7 @@ We scan the flowerbed from left to right.
 
 Whenever the current position is empty and the next position is also empty, we immediately plant a flower at the current position.
 
-This is safe because planting at the earliest available position does not reduce the number of flowers that can be planted later.
+This is safe because planting at the earliest available position does not reduce the maximum number of flowers that can be planted later.
 
 For example:
 
@@ -127,15 +111,7 @@ We can safely plant at `left`:
 [1,0,0]
 ```
 
-After planting, the next possible position is two indexes later.
-
-```text
-[1,0,0]
-     ^
-     next candidate
-```
-
-Therefore, we can skip two positions after planting.
+After planting, the next position cannot be used, so we can move directly to the next possible candidate.
 
 ---
 
@@ -149,7 +125,7 @@ Therefore, we can skip two positions after planting.
  left
 ```
 
-`left` cannot be used, and the next position cannot be used because flowers cannot be adjacent.
+The current position cannot be used, and the next position cannot be used because flowers cannot be adjacent.
 
 Therefore:
 
@@ -159,26 +135,7 @@ left += 2;
 
 ---
 
-### Case 2: Current position is the last position
-
-```text
-[..., 0]
-      ^
-     left
-```
-
-There is no right neighbor.
-
-Since the current position is empty, we can safely plant here.
-
-```java
-n--;
-left += 2;
-```
-
----
-
-### Case 3: Current position is empty, but the next position has a flower
+### Case 2: Current position is empty, but the next position has a flower
 
 ```text
 [0,1]
@@ -186,9 +143,9 @@ left += 2;
  left
 ```
 
-Neither position can be used.
+The current position cannot be used because the next position already contains a flower.
 
-Instead of checking the next positions one by one, we can skip directly to the next possible candidate.
+We can safely skip to the next possible candidate:
 
 ```java
 left += 3;
@@ -196,7 +153,7 @@ left += 3;
 
 ---
 
-### Case 4: Current position and next position are both empty
+### Case 3: Current position and next position are both empty
 
 ```text
 [0,0]
@@ -204,14 +161,89 @@ left += 3;
  left
 ```
 
-We can greedily plant at `left`.
+We can greedily plant at the current position:
 
 ```java
 n--;
 left += 2;
 ```
 
-This avoids checking positions that are already known to be unavailable.
+After planting, the next position cannot be used.
+
+---
+
+### Case 4: Current position is the last position
+
+```text
+[...,0]
+      ^
+     left
+```
+
+In this case:
+
+```java
+left + 1 < flowerbed.length
+```
+
+is `false`.
+
+Therefore, the code naturally falls into the final `else` branch:
+
+```java
+n--;
+left += 2;
+```
+
+Since there is no position to the right, an empty last position can be used.
+
+This means the tail boundary does not require a separate condition.
+
+---
+
+## Head and Tail Boundaries
+
+### Head
+
+We start with:
+
+```java
+int left = 0;
+```
+
+If the flowerbed starts with:
+
+```text
+[0,0,...]
+ ^
+ left
+```
+
+the first position can be planted because there is no position to its left.
+
+Therefore, no special head logic is required.
+
+### Tail
+
+When `left` reaches the last position:
+
+```text
+[...,0]
+      ^
+     left
+```
+
+there is no next position.
+
+The condition:
+
+```java
+left + 1 < flowerbed.length
+```
+
+becomes `false`, so the algorithm naturally falls into the planting case.
+
+Therefore, no separate tail-processing step is required.
 
 ---
 
@@ -219,21 +251,21 @@ This avoids checking positions that are already known to be unavailable.
 
 A more straightforward solution checks the left and right neighbors for every index.
 
-For example:
-
-```java
-if (flowerbed[i] == 0
-        && (i == 0 || flowerbed[i - 1] == 0)
-        && (i == flowerbed.length - 1 || flowerbed[i + 1] == 0)) {
-    // plant a flower
-}
-```
-
 This solution is also `O(n)` and is arguably easier to understand.
 
-However, this approach may repeatedly inspect positions whose state can already be determined from the previous pattern.
+However, our approach uses information from the current pattern to skip positions whose state is already known.
 
-Our approach instead skips those positions directly.
+For example:
+
+```text
+[0,1,...]
+ ^
+ left
+```
+
+Once we know that the next position contains a flower, we already know that the current position cannot be used.
+
+There is no reason to check those positions again.
 
 The difference is not Big-O complexity:
 
@@ -241,11 +273,7 @@ The difference is not Big-O complexity:
 Both approaches: O(n)
 ```
 
-The difference is in the number of operations and array accesses.
-
-This becomes more meaningful when checking a position is expensive.
-
-For example, if a real-world validation involves multiple business rules or expensive checks, avoiding unnecessary validations can reduce the actual runtime.
+The difference is the number of operations and array accesses.
 
 ---
 
@@ -259,8 +287,6 @@ For example, if a real-world validation involves multiple business rules or expe
 | More array checks                 | Fewer array checks                       |
 | `O(n)` time                       | `O(n)` time                              |
 | `O(1)` space                      | `O(1)` space                             |
-
-The main trade-off is **readability vs. unnecessary work**.
 
 The neighbor-checking solution is simpler and has lower implementation risk.
 
@@ -277,7 +303,7 @@ Space: O(1)
 
 Each iteration advances `left` by at least 2 positions, and sometimes by 3 positions.
 
-Therefore, the number of iterations is still bounded by `O(n)`.
+Therefore, the number of iterations is bounded by `O(n)`.
 
 No additional data structure is used, so the auxiliary space is `O(1)`.
 
